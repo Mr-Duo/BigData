@@ -19,10 +19,15 @@ temp_history = []
 
 
 def get_answer(query, history, http, depth):
-    if len(http) != 0:
+    output = ""
+    print(history)
+    print("HTTP: ", http)
+    try:
         urls = re.findall(r'\bhttps?://[^\s<>"]+|www\.[^\s<>"]+\b', http)
         asyncio.run(run_produce_async(urls, int(depth)))
         output = "Crawled from {}\n".format("\n".join(urls))
+    except:
+        pass
     
     if len(query) != 0:
         answer, retrieved_chunks, retrieved_url = rag_retrieval_qa(query, history)

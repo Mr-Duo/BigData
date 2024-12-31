@@ -4,7 +4,7 @@ import json
 import datetime
 
 conf = {
-    'bootstrap.servers': 'localhost:9092'
+    'bootstrap.servers': 'localhost:9092,localhost:9093'
 }
 producer = Producer(conf)
 topic = 'chat-history'

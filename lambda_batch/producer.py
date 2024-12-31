@@ -6,7 +6,7 @@ import json
 
 # Assuming you have a running Kafka server at localhost:9092
 conf = {
-    'bootstrap.servers': 'localhost:9092',
+    'bootstrap.servers': 'localhost:9092,localhost:9093',
     'message.max.bytes': 5242880
 }
 producer = Producer(conf)

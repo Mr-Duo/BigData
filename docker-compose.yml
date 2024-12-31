@@ -1,6 +1,10 @@
 networks:
   internal-network:
     driver: bridge
+    ipam:
+      config:
+        - subnet: 10.5.0.0/16
+          gateway: 10.5.0.1
 
 services:
   puppeteer:
@@ -25,7 +29,8 @@ services:
       - CASSANDRA_CLUSTER_NAME=chatbot-cluster
       - CASSANDRA_SEEDS=cassandra
     networks:
-      - internal-network
+      internal-network:
+        ipv4_address: 10.5.0.5
     restart: always
 
   cassandra-web:
@@ -34,7 +39,7 @@ services:
     depends_on:
       - cassandra
     environment:
-      - CASSANDRA_HOST_IP=172.18.0.2
+      - CASSANDRA_HOST_IP=10.5.0.5
       - CASSANDRA_PORT=9042
     ports:
       - 3000:3000
@@ -63,7 +68,26 @@ services:
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 2
+      KAFKA_REPLICA_FETCH_MAX_BYTES: 5048576
+      KAFKA_PRODUCER_MAX_REQUEST_SIZE: 5048576
+      KAFKA_CONSUMER_MAX_PARTITION_FETCH_BYTES: 5048576
+    networks:
+      - internal-network
+    restart: always
+
+  kafka1:
+    image: confluentinc/cp-kafka:7.3.2
+    container_name: kafka1
+    ports:
+      - "9093:9093"
+    environment:
+      KAFKA_BROKER_ID: 2
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka1:29093,PLAINTEXT_HOST://localhost:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 2
       KAFKA_REPLICA_FETCH_MAX_BYTES: 5048576
       KAFKA_PRODUCER_MAX_REQUEST_SIZE: 5048576
       KAFKA_CONSUMER_MAX_PARTITION_FETCH_BYTES: 5048576

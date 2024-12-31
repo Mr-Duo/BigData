@@ -28,7 +28,7 @@ schema = StructType() \
 # Read data from Kafka
 kafka_stream = spark.readStream \
     .format("kafka") \
-    .option("kafka.bootstrap.servers", "localhost:9092") \
+    .option("kafka.bootstrap.servers", "localhost:9092,localhost:9093") \
     .option("subscribe", "chat-history") \
     .option("startingOffsets", "latest") \
     .load()

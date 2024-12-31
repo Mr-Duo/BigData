@@ -7,7 +7,6 @@ import base64
 import concurrent.futures
     
 from bs4 import BeautifulSoup
-from hdfs import InsecureClient
 from cassandra.cluster import Cluster
 
 import numpy as np
@@ -17,7 +16,7 @@ from confluent_kafka import Consumer
 
 # Kafka configuration
 conf = {
-    'bootstrap.servers': 'localhost:9092',
+    'bootstrap.servers': 'localhost:9092,localhost:9093',
     'group.id': 'file-group',
     'auto.offset.reset': 'earliest'
 }
@@ -40,7 +39,7 @@ keyspace = "chatbot"
 
 session.set_keyspace(keyspace)
 session.execute("""
-CREATE TABLE IF NOT EXISTS documents(
+CREATE TABLE IF NOT EXISTS chatbot.documents(
     id text,
     url text,
     chunk text,

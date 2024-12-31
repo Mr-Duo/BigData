@@ -10,6 +10,7 @@ import faiss
 import pickle
 
 from cassandra.cluster import Cluster
+from config import OPEN_API_KEY
 
 # Cassandra config
 cluster = Cluster(['localhost'], port=9042)
@@ -21,12 +22,9 @@ print("[RAG] Connect cassandra")
 # Models config
 retriever_model="all-MiniLM-L6-v2"
 retriever = SentenceTransformer(retriever_model)
-dummy = retriever.encode(["dummy input"])
-dimension = dummy[0].shape[0]
-index = faiss.IndexFlatL2(dimension)
 
 client = OpenAI(
-    api_key= "<INSERT OPENAI API HERE>"
+    api_key= OPEN_API_KEY
 )
 
 def base64toNumpy(base64_str):
@@ -42,12 +40,15 @@ def faiss_dense_retrieval(prompt):
     chunks = df["chunk"]
     urls = df["url"]
     embeddings = np.array([base64toNumpy(x) for x in df["embed"]])
-   
+    dimension = embeddings[0].shape[0]
+    print("Dimension", dimension)
+    index = faiss.IndexFlatL2(dimension)
     index.add(embeddings)
 
     # Query FAISS
     query_embedding = retriever.encode([prompt])
     distances, indices = index.search(query_embedding, 3)
+
     return [chunks[i] for i in indices[0]], [urls[i] for i in indices[0]]
 
 def generate_answer_with_chatgpt(retrieved_chunks, prompt, history):
@@ -57,9 +58,6 @@ def generate_answer_with_chatgpt(retrieved_chunks, prompt, history):
     If the information in the context and history partially relates to the questions. I want you to think more and extract relevance part and answer as best as the context imply. 
     If only the information is totally unrelated to the question, answer i dont have any information.
     
-    History Chat:
-    {}
-    
     Context:
     {}
 
@@ -67,7 +65,7 @@ def generate_answer_with_chatgpt(retrieved_chunks, prompt, history):
     {}
 
     Answer:
-    """.format("\n\n".join(retrieved_chunks), "\n\n".join(history), prompt)
+    """.format("\n\n".join(retrieved_chunks), prompt)
     
     response = client.chat.completions.create(
         messages= [
